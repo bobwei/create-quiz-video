@@ -6,6 +6,10 @@
     "dev": "npx --yes hyperframes@0.6.21 preview --no-open",
     "check": "npx --yes hyperframes@0.6.21 lint && npx --yes hyperframes@0.6.21 validate && npx --yes hyperframes@0.6.21 inspect",
     "render": "npx --yes hyperframes@0.6.21 render",
-    "publish": "npx --yes hyperframes@0.6.21 publish"
+    "publish": "npx --yes hyperframes@0.6.21 publish",
+    "gen-stickers": "node scripts/gen-stickers.mjs"
+  },
+  "dependencies": {
+    "sharp": "^0.33.5"
   }
 }

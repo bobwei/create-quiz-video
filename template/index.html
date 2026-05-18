@@ -2,18 +2,18 @@
 <html
   lang="zh-Hant"
   data-composition-variables='[
-    {"id":"leadIn","type":"string","label":"引導句","default":"下午三點"},
-    {"id":"title","type":"string","label":"主標題","default":"你最想配什麼？"},
-    {"id":"pill","type":"string","label":"子題（粉色 pill）","default":"來測你的小確幸偏好"},
-    {"id":"quote","type":"string","label":"底部引言","default":"「留言你的選擇，看看你是哪型咖啡控」"},
-    {"id":"optA","type":"string","label":"選項 A emoji","default":"🍰"},
-    {"id":"optB","type":"string","label":"選項 B emoji","default":"☕"},
-    {"id":"optC","type":"string","label":"選項 C emoji","default":"🍪"},
-    {"id":"optD","type":"string","label":"選項 D emoji","default":"🥪"},
-    {"id":"labelA","type":"string","label":"選項 A 文字（可空）","default":""},
-    {"id":"labelB","type":"string","label":"選項 B 文字（可空）","default":""},
-    {"id":"labelC","type":"string","label":"選項 C 文字（可空）","default":""},
-    {"id":"labelD","type":"string","label":"選項 D 文字（可空）","default":""}
+    {"id":"leadIn","type":"string","label":"引導句","default":"身邊那個 TA"},
+    {"id":"title","type":"string","label":"主標題","default":"最該收哪一款？"},
+    {"id":"pill","type":"string","label":"子題（粉色 pill）","default":"幫他選一個禮物"},
+    {"id":"quote","type":"string","label":"底部引言","default":"「留言你的選擇，看你最懂送什麼」"},
+    {"id":"optA","type":"string","label":"選項 A（圖片路徑或 emoji）","default":"assets/sticker-a.png"},
+    {"id":"optB","type":"string","label":"選項 B（圖片路徑或 emoji）","default":"assets/sticker-b.png"},
+    {"id":"optC","type":"string","label":"選項 C（圖片路徑或 emoji）","default":"assets/sticker-c.png"},
+    {"id":"optD","type":"string","label":"選項 D（圖片路徑或 emoji）","default":"assets/sticker-d.png"},
+    {"id":"labelA","type":"string","label":"選項 A 文字（可空）","default":"蝴蝶結"},
+    {"id":"labelB","type":"string","label":"選項 B 文字（可空）","default":"餐具"},
+    {"id":"labelC","type":"string","label":"選項 C 文字（可空）","default":"禮物盒"},
+    {"id":"labelD","type":"string","label":"選項 D 文字（可空）","default":"提袋"}
   ]'
 >
   <head>
@@ -154,11 +154,18 @@
       .opt-emoji {
         font-size: 220px;
         line-height: 1;
-        height: 240px;
+        width: 280px;
+        height: 280px;
         display: flex;
         align-items: center;
         justify-content: center;
         filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.55));
+      }
+
+      .opt-emoji img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
       }
 
       .opt-label {
@@ -269,27 +276,41 @@
         window.__hyperframes && window.__hyperframes.getVariables
           ? window.__hyperframes.getVariables()
           : {
-              leadIn: "下午三點",
-              title: "你最想配什麼？",
-              pill: "來測你的小確幸偏好",
-              quote: "「留言你的選擇，看看你是哪型咖啡控」",
-              optA: "🍰",
-              optB: "☕",
-              optC: "🍪",
-              optD: "🥪",
-              labelA: "",
-              labelB: "",
-              labelC: "",
-              labelD: "",
+              leadIn: "身邊那個 TA",
+              title: "最該收哪一款？",
+              pill: "幫他選一個禮物",
+              quote: "「留言你的選擇，看你最懂送什麼」",
+              optA: "assets/sticker-a.png",
+              optB: "assets/sticker-b.png",
+              optC: "assets/sticker-c.png",
+              optD: "assets/sticker-d.png",
+              labelA: "蝴蝶結",
+              labelB: "餐具",
+              labelC: "禮物盒",
+              labelD: "提袋",
             };
       document.getElementById("lead").textContent = v.leadIn;
       document.getElementById("title-el").textContent = v.title;
       document.getElementById("pill-el").textContent = v.pill;
       document.getElementById("quote-el").textContent = v.quote;
-      document.getElementById("emoji-a").textContent = v.optA;
-      document.getElementById("emoji-b").textContent = v.optB;
-      document.getElementById("emoji-c").textContent = v.optC;
-      document.getElementById("emoji-d").textContent = v.optD;
+      // Each opt accepts either an emoji (e.g. "🥐") or an image path
+      // (e.g. "assets/sticker-a.png"). Detected via file extension.
+      function setOpt(elId, val) {
+        const el = document.getElementById(elId);
+        if (val && /\.(png|jpg|jpeg|webp|svg|gif)(\?.*)?$/i.test(val)) {
+          const img = document.createElement("img");
+          img.src = val;
+          img.alt = "";
+          el.innerHTML = "";
+          el.appendChild(img);
+        } else {
+          el.textContent = val || "";
+        }
+      }
+      setOpt("emoji-a", v.optA);
+      setOpt("emoji-b", v.optB);
+      setOpt("emoji-c", v.optC);
+      setOpt("emoji-d", v.optD);
       document.getElementById("label-a").textContent = v.labelA || "";
       document.getElementById("label-b").textContent = v.labelB || "";
       document.getElementById("label-c").textContent = v.labelC || "";
