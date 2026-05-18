@@ -89,45 +89,33 @@ cp -r "$SKILL_DIR/template" "$TARGET"
 
 也要同步更新 script 區塊的 fallback object（給沒有 hyperframes runtime 時用）。
 
-### Step 5 — 驗證 + 預覽
+### Step 5 — 驗證
 
 ```bash
 cd <target>
 npm run check    # lint + validate + inspect
-npm run dev      # 啟動 preview server（背景執行）
 ```
 
-把 preview URL 給使用者（通常 http://localhost:3002）。
+### Step 6 — 預覽（**預設：手機預覽**）
 
-### Step 6 — 渲染 MP4（使用者要才做）
+**這個 skill 預設給手機看**，因為這個版型本來就是 1080×1920 直式 IG/TikTok/Reels 格式，手機是真正的目標媒體。HyperFrames studio 桌面 UI 在手機上會把 composition 擠成縮圖看不清楚，所以走「render MP4 → cloudflared tunnel → 給 URL + QR」這條。
 
-```bash
-npm run render
-```
+**例外**：如果使用者明說要「桌面 / 電腦預覽」、「用 studio」、「live preview」、「邊改邊看」、「HMR」之類，跳到 Step 7。
 
-預設輸出在 `renders/` 資料夾。
-
-### Step 7 — 手機預覽（使用者說要在手機看才做）
-
-**觸發**：使用者說「在手機上預覽」、「我想用手機看」、「給我手機可以開的網址」、「mobile preview」之類。
-
-**為什麼不直接用 studio**：HyperFrames studio 桌面 UI 在手機上會把 composition 擠成縮圖，沒法看清楚。最直觀的方式是 render 成 MP4 用手機原生 player 播。
-
-**流程**：
+**手機預覽流程**：
 
 ```bash
 # 1. Render MP4（10s 影片約 25-90 秒，跟硬體有關）
 cd <target>
 npm run render
-# 找出剛 render 好的檔案：
 LATEST=$(ls -t renders/*.mp4 | head -1)
 
-# 2. 在 renders/ 開靜態 server（背景）
+# 2. 在 renders/ 開靜態 server（背景執行）
 cd renders && python3 -m http.server 8765 &
 
-# 3. cloudflared quick tunnel（背景）
+# 3. cloudflared quick tunnel（背景執行）
 cloudflared tunnel --url http://localhost:8765 &
-# 等它印出 https://<random>.trycloudflare.com URL（agent 要從 stderr/log 讀出來）
+# 等它印出 https://<random>.trycloudflare.com URL（從 stderr/log 抓）
 
 # 4. 組出 MP4 直接連結：
 #    https://<random>.trycloudflare.com/<filename>.mp4
@@ -146,6 +134,28 @@ python3 -c "import qrcode; qr=qrcode.QRCode(border=1); qr.add_data('<URL>'); qr.
 - 沒 `python3 qrcode` 套件：URL 還是給，QR 跳過或建議 `pip install qrcode`
 
 **不要用 `hyperframes publish`**：產生的 URL 要登入 hyperframes.dev 才能看，對「快速給手機看」是反效果。
+
+### Step 7 — 桌面 studio 預覽（使用者明說才用）
+
+當使用者要 live preview / HMR / 邊改邊看：
+
+```bash
+cd <target>
+npm run dev    # 背景執行，studio 在 http://localhost:3002
+```
+
+把 URL 給使用者，他在電腦瀏覽器打開就能看，改檔案會 hot reload。
+
+**注意**：手機別開這個 URL（即使 tunnel 出去），UI 是給桌面用的。
+
+### Step 8 — 只要 MP4 不要 tunnel（使用者明說才用）
+
+```bash
+cd <target>
+npm run render
+```
+
+輸出在 `renders/<project>_<timestamp>.mp4`。給使用者檔案路徑，他自己處理（AirDrop / 上傳 / 拖進剪輯軟體）。
 
 ## 內容範例（給 agent 參考語氣）
 
