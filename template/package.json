@@ -8,8 +8,5 @@
     "render": "npx --yes hyperframes@0.6.21 render",
     "publish": "npx --yes hyperframes@0.6.21 publish",
     "gen-stickers": "node scripts/gen-stickers.mjs"
-  },
-  "dependencies": {
-    "sharp": "^0.33.5"
   }
 }

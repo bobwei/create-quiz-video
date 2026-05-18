@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Generate 4 sticker-style flat illustration PNGs via Gemini 3 Pro Image,
-// then strip the white background and trim transparent margins.
+// then post-process via ImageMagick CLI: strip white bg → trim → center-pad
+// to square with 5% margin. Single magick invocation per image.
 //
 // Usage:
 //   node scripts/gen-stickers.mjs '[
@@ -10,12 +11,12 @@
 //     {"slug":"d","subject":"a sesame bagel split in half on a cutting board"}
 //   ]'
 //
-// Writes to assets/sticker-<slug>.png. Requires GEMINI_API_KEY in env and
-// `sharp` installed (npm install).
+// Requires: GEMINI_API_KEY in env, `magick` (ImageMagick 7) on PATH.
+// No npm deps.
 
 import { writeFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
-import sharp from "sharp";
+import { spawn } from "node:child_process";
 
 const PROJECT = resolve(new URL("..", import.meta.url).pathname);
 const ASSETS = join(PROJECT, "assets");
@@ -50,9 +51,6 @@ const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:ge
 const STYLE =
   "Cute flat illustration of {SUBJECT}. Soft pastel colors, hand-drawn style, simple clean shapes, NO outline, NO border, NO sticker effect, NO shadow, NO text. Pure white background (#FFFFFF), isolated subject, lots of empty whitespace padding around the subject, centered composition.";
 
-const WHITE_THRESHOLD = 235;
-const PAD_RATIO = 0.05;
-
 async function gen(prompt) {
   const body = { contents: [{ parts: [{ text: prompt }] }] };
   const res = await fetch(URL, {
@@ -67,43 +65,42 @@ async function gen(prompt) {
   return Buffer.from(part.inlineData.data, "base64");
 }
 
-async function postProcess(buf) {
-  const { data, info } = await sharp(buf).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
-  const ch = info.channels;
-  for (let i = 0; i < data.length; i += ch) {
-    if (
-      data[i] >= WHITE_THRESHOLD &&
-      data[i + 1] >= WHITE_THRESHOLD &&
-      data[i + 2] >= WHITE_THRESHOLD
-    ) {
-      data[i + 3] = 0;
-    }
-  }
-  const stripped = await sharp(data, {
-    raw: { width: info.width, height: info.height, channels: ch },
-  })
-    .png()
-    .toBuffer();
-
-  const trimmed = await sharp(stripped)
-    .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 } })
-    .toBuffer();
-  const meta = await sharp(trimmed).metadata();
-  const pad = Math.round(Math.max(meta.width, meta.height) * PAD_RATIO);
-  const side = Math.max(meta.width, meta.height) + pad * 2;
-
-  return sharp({
-    create: { width: side, height: side, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
-  })
-    .composite([
-      {
-        input: trimmed,
-        left: Math.round((side - meta.width) / 2),
-        top: Math.round((side - meta.height) / 2),
-      },
-    ])
-    .png()
-    .toBuffer();
+// One-shot ImageMagick: strip near-white → trim → pad to square (max(w,h)*1.10).
+function postProcess(input) {
+  return new Promise((resolveP, rejectP) => {
+    const args = [
+      "-",
+      "-fuzz",
+      "8%",
+      "-transparent",
+      "white",
+      "-trim",
+      "+repage",
+      "-set",
+      "option:dim",
+      "%[fx:int(max(w,h)*1.10)]",
+      "-background",
+      "none",
+      "-gravity",
+      "center",
+      "-extent",
+      "%[dim]x%[dim]",
+      "png:-",
+    ];
+    const p = spawn("magick", args);
+    const chunks = [];
+    const errs = [];
+    p.stdout.on("data", (c) => chunks.push(c));
+    p.stderr.on("data", (c) => errs.push(c));
+    p.on("error", (e) => rejectP(new Error(`spawn magick: ${e.message}. Install: brew install imagemagick`)));
+    p.on("exit", (code) =>
+      code === 0
+        ? resolveP(Buffer.concat(chunks))
+        : rejectP(new Error(`magick exit ${code}: ${Buffer.concat(errs).toString().slice(0, 400)}`)),
+    );
+    p.stdin.write(input);
+    p.stdin.end();
+  });
 }
 
 for (const item of spec) {

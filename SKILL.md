@@ -13,7 +13,11 @@ description: 用 HyperFrames 製作 1080×1920 直式 quiz 卡片影片（IG Ree
   - **檢查方式**：第一步靜默檢查 `printenv GEMINI_API_KEY`（或等同方式）。
   - **已設好 → 不要提**，直接往下做，**不要對使用者宣告「key 已 ready」之類**，那是雜訊。
   - **沒設 → 才中止流程**，告訴使用者：「找不到 `GEMINI_API_KEY`，請到 https://aistudio.google.com/apikey 拿一個，`export GEMINI_API_KEY=...`（建議寫進 `~/.zshenv`）後再試。」這時不要繼續往下做。
-- 第一次用要 `npm install`（template 有 `sharp` 依賴做圖片後處理）。
+- **ImageMagick 7**（`magick` CLI）必須在 PATH。用來剝白底 / trim / 補白置中。
+  - **檢查方式**：第一步靜默檢查 `which magick`。
+  - **已裝好 → 不要提**，直接往下做。
+  - **沒裝 → 才提示**：「找不到 `magick`，請 `brew install imagemagick`（macOS）或 `apt install imagemagick`（Linux）後再試。」中止流程。
+- **不需要** `npm install` — template 已經沒有 npm 依賴了。
 
 ## 觸發
 
@@ -99,7 +103,7 @@ a single sesame bagel split in half, top-down, single object centered
 
 ### Step 3 — 建立 project
 
-從這個 skill 的 base directory 複製 template，然後 `npm install`（template 有 sharp 依賴）：
+從這個 skill 的 base directory 複製 template：
 
 ```bash
 # Skill base dir 由 runtime 提供，通常是 ~/.agents/skills/create-quiz-video/
@@ -108,16 +112,17 @@ SKILL_DIR="$(dirname "$(realpath ~/.agents/skills/create-quiz-video/SKILL.md 2>/
 # 在使用者的 cwd 下開新資料夾（用主題的 slug）
 TARGET="quiz-<topic-slug>"
 cp -r "$SKILL_DIR/template" "$TARGET"
-cd "$TARGET" && npm install --silent
 ```
+
+複製完直接就能用，**不需要 `npm install`**。
 
 **注意**：實際呼叫時請用 Read 看 SKILL.md 的真實路徑，因為 skills 可能裝在 `~/.claude/skills/` 或 `~/.agents/skills/`、global 或 project 範圍，路徑會不同。最穩的做法是用環境變數或讀取當前 SKILL.md 的位置反推。
 
 ### Step 4 — 生成 sticker（**必跑**）
 
-把 Step 2 想出的 4 個 subject 餵給 script。script 會自動：呼叫 Gemini 3 Pro Image → 白底剝透明 → trim → 補白置中 → 存到 `assets/sticker-{slug}.png`。
+把 Step 2 想出的 4 個 subject 餵給 script。script 會自動：呼叫 Gemini 3 Pro Image → 用 `magick` CLI 剝白底 + trim + 補白置中 → 存到 `assets/sticker-{slug}.png`。
 
-（`GEMINI_API_KEY` 在「必要條件」那段就已經靜默檢查過了，這裡不用再說一次。）
+（`GEMINI_API_KEY` 跟 `magick` 在「必要條件」那段就已經靜默檢查過了，這裡不用再說一次。）
 
 ```bash
 cd <target>

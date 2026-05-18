@@ -6,15 +6,16 @@ Claude / Cursor / Codex 的 **agent skill**，用 [HyperFrames](https://hyperfra
 
 1. 想出引導句、主標題、粉色 pill 子題、4 個選項的中文標籤、底部 CTA
 2. 想出 4 個對應的 sticker 英文 subject 描述
-3. 複製內附 template 到當前目錄、`npm install`
-4. 呼叫 Gemini 3 Pro Image 生成 4 個 sticker（手繪扁平風，自動剝白底、trim、置中）
+3. 複製內附 template 到當前目錄
+4. 呼叫 Gemini 3 Pro Image 生成 4 個 sticker（手繪扁平風，`magick` CLI 自動剝白底、trim、置中）
 5. 填入文字內容、跑驗證
 6. 預設**手機預覽**：render MP4 → cloudflared tunnel → 給你純文字 URL + ASCII QR
 
 ## 必要條件
 
 - **`GEMINI_API_KEY`**：到 https://aistudio.google.com/apikey 拿一個，`export GEMINI_API_KEY=...`（建議寫進 `.zshenv`）
-- **Node.js 20+ 與 npm**：跑 `sharp`（圖片後處理）
+- **Node.js 20+**：跑 hyperframes 與 sticker script
+- **ImageMagick 7**：`brew install imagemagick`（macOS）/ `apt install imagemagick`（Linux）
 - **cloudflared**（手機預覽用）：`brew install cloudflared`
 - **python3 qrcode**（QR Code 印出）：`pip install qrcode`
 
@@ -65,12 +66,11 @@ Agent 會接手剩下的工作。
 ## 不用 agent，手動產
 
 ```bash
-# 1. clone
+# 1. clone（不用 npm install）
 git clone https://github.com/bobwei/create-quiz-video.git
 cd create-quiz-video/template
-npm install
 
-# 2. 生 4 個客製 sticker（需要 GEMINI_API_KEY）
+# 2. 生 4 個客製 sticker（需要 GEMINI_API_KEY + magick）
 export GEMINI_API_KEY=AIzaSy...
 node scripts/gen-stickers.mjs '[
   {"slug":"a","subject":"a single golden croissant on a small white plate, top-down view, single object centered"},
@@ -103,3 +103,4 @@ npm run render   # render MP4
 - 內附背景影片 `bg-coffee.mp4`：請自行確認用途與來源授權；正式商用建議換成你自有素材
 - 字型 `jf-openhuninn`：粉圓體，[justfont 開源中文字型](https://justfont.com/huninn/)，CC BY 4.0
 - Gemini API 是付費服務，每張圖目前約 $0.04，4 張一支影片約 $0.16
+- ImageMagick：[Apache 2.0](https://imagemagick.org/script/license.php)
