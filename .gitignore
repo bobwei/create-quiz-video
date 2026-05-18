@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+template/renders/
+template/node_modules/
+template/.hyperframes/
+*.log

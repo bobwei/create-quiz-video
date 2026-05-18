@@ -1,0 +1,11 @@
+{
+  "name": "quiz-card",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx --yes hyperframes@0.6.21 preview",
+    "check": "npx --yes hyperframes@0.6.21 lint && npx --yes hyperframes@0.6.21 validate && npx --yes hyperframes@0.6.21 inspect",
+    "render": "npx --yes hyperframes@0.6.21 render",
+    "publish": "npx --yes hyperframes@0.6.21 publish"
+  }
+}
