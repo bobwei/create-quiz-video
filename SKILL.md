@@ -107,6 +107,46 @@ npm run render
 
 預設輸出在 `renders/` 資料夾。
 
+### Step 7 — 手機預覽（使用者說要在手機看才做）
+
+**觸發**：使用者說「在手機上預覽」、「我想用手機看」、「給我手機可以開的網址」、「mobile preview」之類。
+
+**為什麼不直接用 studio**：HyperFrames studio 桌面 UI 在手機上會把 composition 擠成縮圖，沒法看清楚。最直觀的方式是 render 成 MP4 用手機原生 player 播。
+
+**流程**：
+
+```bash
+# 1. Render MP4（10s 影片約 25-90 秒，跟硬體有關）
+cd <target>
+npm run render
+# 找出剛 render 好的檔案：
+LATEST=$(ls -t renders/*.mp4 | head -1)
+
+# 2. 在 renders/ 開靜態 server（背景）
+cd renders && python3 -m http.server 8765 &
+
+# 3. cloudflared quick tunnel（背景）
+cloudflared tunnel --url http://localhost:8765 &
+# 等它印出 https://<random>.trycloudflare.com URL（agent 要從 stderr/log 讀出來）
+
+# 4. 組出 MP4 直接連結：
+#    https://<random>.trycloudflare.com/<filename>.mp4
+
+# 5. 印 QR Code（方便手機掃）
+python3 -c "import qrcode; qr=qrcode.QRCode(border=1); qr.add_data('<URL>'); qr.make(); qr.print_ascii(invert=True)"
+```
+
+**給使用者的訊息要包含**：
+- MP4 純文字 URL（**不要包 markdown**，會在某些終端機被截掉）
+- ASCII QR Code
+- 一句說明 tunnel 是臨時的，session 關掉就斷
+
+**Fallback（沒裝 cloudflared / python qrcode 時）**：
+- 沒 `cloudflared`：建議用 macOS AirDrop / iCloud Drive / Google Drive 把 MP4 傳手機，或安裝 `brew install cloudflared`
+- 沒 `python3 qrcode` 套件：URL 還是給，QR 跳過或建議 `pip install qrcode`
+
+**不要用 `hyperframes publish`**：產生的 URL 要登入 hyperframes.dev 才能看，對「快速給手機看」是反效果。
+
 ## 內容範例（給 agent 參考語氣）
 
 **主題：早餐人格**
