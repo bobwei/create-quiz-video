@@ -46,14 +46,14 @@ if (!Array.isArray(spec) || spec.length === 0) {
 }
 
 const MODEL = "gemini-3-pro-image-preview";
-const URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
 
 const STYLE =
   "Cute flat illustration of {SUBJECT}. Soft pastel colors, hand-drawn style, simple clean shapes, NO outline, NO border, NO sticker effect, NO shadow, NO text. Pure white background (#FFFFFF), isolated subject, lots of empty whitespace padding around the subject, centered composition.";
 
 async function gen(prompt) {
   const body = { contents: [{ parts: [{ text: prompt }] }] };
-  const res = await fetch(URL, {
+  const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
