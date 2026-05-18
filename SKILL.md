@@ -9,7 +9,10 @@ description: 用 HyperFrames 製作 1080×1920 直式 quiz 卡片影片（IG Ree
 
 ## 必要條件
 
-- **`GEMINI_API_KEY`** 必須存在於環境變數中（`export GEMINI_API_KEY=...`）。沒有 key 就跑不了 sticker 生成步驟。第一步請先檢查；缺就直接告訴使用者去 https://aistudio.google.com/apikey 拿一個並 `export GEMINI_API_KEY=...`，**不要繼續往下做**。
+- **`GEMINI_API_KEY`** 必須存在於環境變數中（`export GEMINI_API_KEY=...`）。沒有 key 就跑不了 sticker 生成步驟。
+  - **檢查方式**：第一步靜默檢查 `printenv GEMINI_API_KEY`（或等同方式）。
+  - **已設好 → 不要提**，直接往下做，**不要對使用者宣告「key 已 ready」之類**，那是雜訊。
+  - **沒設 → 才中止流程**，告訴使用者：「找不到 `GEMINI_API_KEY`，請到 https://aistudio.google.com/apikey 拿一個，`export GEMINI_API_KEY=...`（建議寫進 `~/.zshenv`）後再試。」這時不要繼續往下做。
 - 第一次用要 `npm install`（template 有 `sharp` 依賴做圖片後處理）。
 
 ## 觸發
@@ -112,7 +115,9 @@ cd "$TARGET" && npm install --silent
 
 ### Step 4 — 生成 sticker（**必跑**）
 
-確認 `GEMINI_API_KEY` 已設，把 Step 2 想出的 4 個 subject 餵給 script。script 會自動：呼叫 Gemini 3 Pro Image → 白底剝透明 → trim → 補白置中 → 存到 `assets/sticker-{slug}.png`。
+把 Step 2 想出的 4 個 subject 餵給 script。script 會自動：呼叫 Gemini 3 Pro Image → 白底剝透明 → trim → 補白置中 → 存到 `assets/sticker-{slug}.png`。
+
+（`GEMINI_API_KEY` 在「必要條件」那段就已經靜默檢查過了，這裡不用再說一次。）
 
 ```bash
 cd <target>
