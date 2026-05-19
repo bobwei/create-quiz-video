@@ -103,22 +103,30 @@ function postProcess(input) {
   });
 }
 
-for (const item of spec) {
-  const { slug, subject } = item;
-  if (!slug || !subject) {
-    console.error(`skipping bad entry: ${JSON.stringify(item)}`);
-    continue;
-  }
-  const name = `sticker-${slug}.png`;
-  process.stdout.write(`generating ${name} ... `);
-  try {
-    const raw = await gen(STYLE.replace("{SUBJECT}", subject));
-    const processed = await postProcess(raw);
-    const out = join(ASSETS, name);
-    await writeFile(out, processed);
-    console.log(`${processed.length} bytes`);
-  } catch (e) {
-    console.error(`FAILED: ${e.message}`);
-    process.exitCode = 1;
-  }
-}
+console.log(`generating ${spec.length} sticker(s) in parallel...`);
+const t0 = Date.now();
+
+await Promise.all(
+  spec.map(async (item) => {
+    const { slug, subject } = item;
+    if (!slug || !subject) {
+      console.error(`✗ skipping bad entry: ${JSON.stringify(item)}`);
+      process.exitCode = 1;
+      return;
+    }
+    const name = `sticker-${slug}.png`;
+    const start = Date.now();
+    try {
+      const raw = await gen(STYLE.replace("{SUBJECT}", subject));
+      const processed = await postProcess(raw);
+      const out = join(ASSETS, name);
+      await writeFile(out, processed);
+      console.log(`✓ ${name} (${processed.length} bytes, ${((Date.now() - start) / 1000).toFixed(1)}s)`);
+    } catch (e) {
+      console.error(`✗ ${name} FAILED: ${e.message}`);
+      process.exitCode = 1;
+    }
+  }),
+);
+
+console.log(`done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
